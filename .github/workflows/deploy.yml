@@ -1,0 +1,21 @@
+name: Deploy to EC2
+on:
+  push:
+    branches: [main]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            cd /home/ubuntu/hireflow
+            git pull origin main
+            cd server && npm install
+            pm2 restart hireflow-server || pm2 start src/index.js --name hireflow-server
+            cd ../client && npm install && npm run build
